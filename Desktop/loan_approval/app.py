@@ -22,11 +22,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # 2. BACKGROUND IMAGE
 # ==========================================
 
-BACKGROUND_PATH = os.path.join(BASE_DIR, "background.png")
+BACKGROUND_PATH = os.path.join(
+    BASE_DIR,
+    "background.png"
+)
 
 if os.path.exists(BACKGROUND_PATH):
 
     with open(BACKGROUND_PATH, "rb") as image:
+
         encoded_image = base64.b64encode(
             image.read()
         ).decode()
@@ -48,10 +52,12 @@ if os.path.exists(BACKGROUND_PATH):
     </style>
 
     <div class="hero-banner"></div>
+
     """, unsafe_allow_html=True)
 
 else:
-    st.warning("background.png not found. Please add the image.")
+
+    st.warning("Background image not found!")
 
 # ==========================================
 # 3. PROFESSIONAL CSS DESIGN
@@ -85,7 +91,7 @@ div[data-testid="stForm"] {
     box-shadow: 0 5px 20px rgba(20,50,90,0.08);
 }
 
-/* Form Button */
+/* Submit Button */
 
 div[data-testid="stFormSubmitButton"] button {
     background-color: #1769aa;
@@ -101,7 +107,7 @@ div[data-testid="stFormSubmitButton"] button:hover {
     color: white;
 }
 
-/* Prediction Metrics */
+/* Metric Cards */
 
 div[data-testid="stMetric"] {
     background: white;
@@ -110,6 +116,8 @@ div[data-testid="stMetric"] {
     border: 1px solid #dce6f5;
     box-shadow: 0 3px 12px rgba(20,50,90,0.05);
 }
+
+/* Headings */
 
 h1, h2, h3 {
     color: #16345c;
@@ -141,22 +149,31 @@ MODEL_PATH = os.path.join(
 
 @st.cache_resource
 def load_model():
+
     return joblib.load(MODEL_PATH)
 
 
 if not os.path.exists(MODEL_PATH):
-    st.error("Model file not found! Please check the project folder.")
+
+    st.error(
+        "Model file not found! Please check the project folder."
+    )
+
     st.stop()
 
+
 try:
+
     model = load_model()
 
 except Exception as e:
+
     st.error(f"Model loading error: {e}")
+
     st.stop()
 
 # ==========================================
-# 6. APPLICATION INFORMATION
+# 6. APPLICANT INFORMATION
 # ==========================================
 
 st.info(
@@ -168,6 +185,10 @@ st.subheader("👤 Applicant Information")
 with st.form("loan_prediction_form"):
 
     col1, col2 = st.columns(2)
+
+    # --------------------------------------
+    # LEFT COLUMN
+    # --------------------------------------
 
     with col1:
 
@@ -196,20 +217,26 @@ with st.form("loan_prediction_form"):
             ["Yes", "No"]
         )
 
-        applicant_income = st.number_input(
+        # Direct number typing
+
+        applicant_income = st.text_input(
             "Applicant Income",
-            min_value=0,
-            value=5000,
-            step=500
+            value="5000",
+            placeholder="Enter applicant income"
         )
+
+    # --------------------------------------
+    # RIGHT COLUMN
+    # --------------------------------------
 
     with col2:
 
-        coapplicant_income = st.number_input(
+        # Direct number typing
+
+        coapplicant_income = st.text_input(
             "Coapplicant Income",
-            min_value=0,
-            value=0,
-            step=500
+            value="0",
+            placeholder="Enter coapplicant income"
         )
 
         loan_amount = st.number_input(
@@ -240,12 +267,39 @@ with st.form("loan_prediction_form"):
     )
 
 # ==========================================
-# 7. PREDICTION
+# 7. LOAN PREDICTION
 # ==========================================
 
 if submitted:
 
+    # Validate income
+
+    if not applicant_income.isdigit():
+
+        st.error(
+            "Please enter a valid Applicant Income."
+        )
+
+        st.stop()
+
+    if not coapplicant_income.isdigit():
+
+        st.error(
+            "Please enter a valid Coapplicant Income."
+        )
+
+        st.stop()
+
+    # Convert income into integer
+
+    applicant_income = int(applicant_income)
+
+    coapplicant_income = int(coapplicant_income)
+
+    # Prepare input data
+
     input_data = pd.DataFrame([{
+
         "Gender": gender,
         "Married": married,
         "Dependents": dependents,
@@ -257,20 +311,25 @@ if submitted:
         "Loan_Amount_Term": loan_term,
         "Credit_History": credit_history,
         "Property_Area": property_area
+
     }])
 
     try:
+
+        # Model prediction
 
         prediction = model.predict(input_data)[0]
 
         probabilities = model.predict_proba(input_data)[0]
 
+        # Target encoding:
         # Rejected = 0
         # Approved = 1
 
         classes = list(model.classes_)
 
         approved_index = classes.index(1)
+
         rejected_index = classes.index(0)
 
         approval_probability = (
@@ -290,9 +349,11 @@ if submitted:
         st.subheader("📊 Loan Prediction Result")
 
         if prediction == 1:
+
             st.success("🎉 Loan Approved!")
 
         else:
+
             st.error("❌ Loan Rejected!")
 
         col1, col2 = st.columns(2)
@@ -311,7 +372,13 @@ if submitted:
                 f"{rejection_probability:.2f}%"
             )
 
-        st.progress(float(probabilities[approved_index]))
+        # Approval progress
+
+        st.write("Approval Probability")
+
+        st.progress(
+            float(probabilities[approved_index])
+        )
 
         # ==================================
         # 9. APPLICANT DETAILS
@@ -326,9 +393,9 @@ if submitted:
         )
 
         st.caption(
-            "Note: These are machine learning estimates for "
-            "educational purposes only. Actual bank approval "
-            "may differ."
+            "Note: This is an educational machine learning "
+            "demonstration. Predictions are estimates and "
+            "do not guarantee actual bank approval."
         )
 
     except Exception as e:
@@ -353,7 +420,6 @@ Educational Demonstration Only.
 
 </div>
 """, unsafe_allow_html=True)
-
 
 
 
