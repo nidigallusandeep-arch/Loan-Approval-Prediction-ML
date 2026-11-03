@@ -1,117 +1,171 @@
 
 import os
-import base64
 import joblib
 import streamlit as st
 import pandas as pd
 
-# --------------------------------
-# 1. Page Configuration
-# --------------------------------
+# =========================================
+# 1. PAGE CONFIGURATION
+# =========================================
+
 st.set_page_config(
     page_title="AI Loan Approval Prediction",
     page_icon="🏦",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# --------------------------------
-# 2. Project File Paths
-# --------------------------------
+# =========================================
+# 2. PROFESSIONAL UI DESIGN
+# =========================================
+
+st.markdown("""
+<style>
+
+/* Remove all background images */
+.stApp {
+    background: linear-gradient(
+        135deg,
+        #eaf2ff 0%,
+        #f5f8ff 50%,
+        #e6f4f1 100%
+    ) !important;
+    background-image: none !important;
+}
+
+[data-testid="stAppViewContainer"] {
+    background: transparent !important;
+}
+
+[data-testid="stHeader"] {
+    background: transparent !important;
+}
+
+/* Main container */
+.main .block-container {
+    max-width: 1200px;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+/* Title */
+.main-title {
+    text-align: center;
+    color: #16345c;
+    font-size: 38px;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #52657d;
+    font-size: 17px;
+    margin-bottom: 25px;
+}
+
+/* Form design */
+div[data-testid="stForm"] {
+    background: #ffffff !important;
+    padding: 25px;
+    border-radius: 16px;
+    border: 1px solid #dce6f5;
+    box-shadow: 0 5px 20px rgba(20,50,90,0.08);
+}
+
+/* Prediction button */
+div[data-testid="stFormSubmitButton"] button {
+    background-color: #1769aa !important;
+    color: white !important;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+    min-height: 48px;
+}
+
+div[data-testid="stFormSubmitButton"] button:hover {
+    background-color: #104d80 !important;
+    color: white !important;
+}
+
+/* Metric cards */
+div[data-testid="stMetric"] {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #dce6f5;
+}
+
+h1, h2, h3 {
+    color: #16345c;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# =========================================
+# 3. MODEL FILE PATH
+# =========================================
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MODEL_PATH = os.path.join(
-    BASE_DIR, "loan_approval_gradient_boosting.pkl"
+    BASE_DIR,
+    "loan_approval_gradient_boosting.pkl"
 )
 
-BACKGROUND_PATH = os.path.join(
-    BASE_DIR, "background.png"
-)
 
-# --------------------------------
-# 3. Background Image
-# --------------------------------
-def add_bg_from_local(image_file):
-    if not os.path.exists(image_file):
-        st.warning("Background image not found. Using default background.")
-        return
+# =========================================
+# 4. LOAD TRAINED MODEL
+# =========================================
 
-    with open(image_file, "rb") as file:
-        encoded = base64.b64encode(file.read()).decode()
-
-    st.markdown(
-        f"""
-        <style>
-        .stApp {{
-            background-image:
-                linear-gradient(rgba(255,255,255,0.82),
-                                rgba(255,255,255,0.82)),
-                url("data:image/png;base64,{encoded}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }}
-
-        .main-title {{
-            color: #123456;
-            text-align: center;
-            font-size: 38px;
-            font-weight: bold;
-        }}
-
-        .subtitle {{
-            text-align: center;
-            color: #333333;
-            font-size: 17px;
-        }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-
-add_bg_from_local(BACKGROUND_PATH)
-
-# --------------------------------
-# 4. Load Trained Model
-# --------------------------------
 @st.cache_resource
 def load_model():
-    if not os.path.exists(MODEL_PATH):
-        raise FileNotFoundError(
-            f"Model file not found: {MODEL_PATH}"
-        )
-
     return joblib.load(MODEL_PATH)
 
 
-try:
-    model = load_model()
-except Exception as e:
-    st.error(f"Unable to load model: {e}")
+if not os.path.exists(MODEL_PATH):
+    st.error("Model file not found! Check your project folder.")
     st.stop()
 
-# --------------------------------
-# 5. Application Header
-# --------------------------------
+try:
+    model = load_model()
+
+except Exception as e:
+    st.error(f"Model loading error: {e}")
+    st.stop()
+
+
+# =========================================
+# 5. APPLICATION HEADER
+# =========================================
+
 st.markdown(
-    '<div class="main-title">🏦 AI Loan Approval Prediction</div>',
+    '<div class="main-title">'
+    '🏦 AI Loan Approval Prediction'
+    '</div>',
     unsafe_allow_html=True
 )
 
 st.markdown(
-    '<div class="subtitle">Predict loan approval status using Machine Learning</div>',
+    '<div class="subtitle">'
+    'Smart Loan Eligibility Prediction Using Machine Learning'
+    '</div>',
     unsafe_allow_html=True
 )
 
 st.divider()
 
 st.info(
-    "Enter applicant details below to predict the loan approval status."
+    "Enter applicant information below to predict loan approval status."
 )
 
-# --------------------------------
-# 6. Applicant Input Form
-# --------------------------------
+
+# =========================================
+# 6. APPLICANT INFORMATION FORM
+# =========================================
+
 st.subheader("👤 Applicant Information")
 
 with st.form("loan_prediction_form"):
@@ -119,6 +173,7 @@ with st.form("loan_prediction_form"):
     col1, col2 = st.columns(2)
 
     with col1:
+
         gender = st.selectbox(
             "Gender",
             ["Male", "Female"]
@@ -152,6 +207,7 @@ with st.form("loan_prediction_form"):
         )
 
     with col2:
+
         coapplicant_income = st.number_input(
             "Coapplicant Income",
             min_value=0,
@@ -182,13 +238,15 @@ with st.form("loan_prediction_form"):
         )
 
     submitted = st.form_submit_button(
-        "Predict Loan Approval",
+        "🔍 Predict Loan Approval",
         use_container_width=True
     )
 
-# --------------------------------
-# 7. Prediction
-# --------------------------------
+
+# =========================================
+# 7. LOAN PREDICTION
+# =========================================
+
 if submitted:
 
     input_data = pd.DataFrame([{
@@ -206,38 +264,87 @@ if submitted:
     }])
 
     try:
+
         prediction = model.predict(input_data)[0]
 
-        probability = model.predict_proba(input_data)[0]
+        probabilities = model.predict_proba(input_data)[0]
 
-        # Model target encoding:
-        # Rejected = 0, Approved = 1
-        if prediction == 1:
-            st.success("🎉 Loan Approved!")
-        else:
-            st.error("❌ Loan Rejected!")
+        # Training target encoding:
+        # Rejected = 0
+        # Approved = 1
 
-        approval_probability = probability[1] * 100
+        approved_index = list(model.classes_).index(1)
 
-        st.metric(
-            "Approval Probability",
-            f"{approval_probability:.2f}%"
+        approval_probability = (
+            probabilities[approved_index] * 100
         )
 
-        st.progress(float(probability[1]))
+        rejection_probability = (
+            100 - approval_probability
+        )
 
-        st.subheader("Prediction Details")
-        st.dataframe(input_data, use_container_width=True)
+        st.divider()
+
+        st.subheader("📊 Loan Prediction Result")
+
+        if prediction == 1:
+
+            st.success("🎉 Loan Approved!")
+
+        else:
+
+            st.error("❌ Loan Rejected!")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.metric(
+                "Approval Probability",
+                f"{approval_probability:.2f}%"
+            )
+
+        with col2:
+
+            st.metric(
+                "Rejection Probability",
+                f"{rejection_probability:.2f}%"
+            )
+
+        st.progress(
+            float(approval_probability / 100)
+        )
+
+        st.subheader("📋 Applicant Details")
+
+        st.dataframe(
+            input_data,
+            use_container_width=True,
+            hide_index=True
+        )
 
     except Exception as e:
+
         st.error(f"Prediction error: {e}")
 
-# --------------------------------
-# 8. Footer
-# --------------------------------
+
+# =========================================
+# 8. FOOTER
+# =========================================
+
 st.divider()
 
-st.caption(
-    "Developed as a Machine Learning project | "
-    "Gradient Boosting Classifier | Educational demonstration only"
-)
+st.markdown("""
+<div style="
+    text-align:center;
+    color:#52657d;
+    padding:15px;
+">
+    <b>AI Loan Approval Prediction</b><br>
+    Developed using Python, Pandas, Scikit-learn
+    and Gradient Boosting Classifier.<br>
+    Educational demonstration only.
+</div>
+""", unsafe_allow_html=True)
+
+
